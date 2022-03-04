@@ -13,6 +13,21 @@ var createTask = function(taskText, taskDate, taskList) {
   // append span and p element to parent li
   taskLi.append(taskSpan, taskP);
 
+  var auditTask = function(taskEl) {
+    var date = $(taskEl).find("span").text().trim();
+
+    var time = moment(date, "L").set("hour", 17);
+
+    $(taskEl).removeClass("list-group-item-warning list-group-item-danger");
+
+    if (moment().isAfter(time)) {
+      $(taskEl).addClass("list-group-item-danger");
+    }
+    else if (Math.abs(moment().diff(time, "days")) <= 2) {
+      $(taskEl).addClass("list-group-item-warning");
+    }
+  };
+
   // append to ul list on the page
   $("#list-" + taskList).append(taskLi);
 };
@@ -165,7 +180,7 @@ $(".list-group").on("click", "p", function() {
 });
 
 // editable field was un-focused
-$(".list-group").on("blur", "textarea", function() {
+$(".list-group").on("change", "input[type='text']", function() {
   // get current value of textarea
   var text = $(this).val();
 
@@ -205,9 +220,26 @@ $(".list-group").on("click", "span", function() {
     .val(date);
   $(this).replaceWith(dateInput);
 
-  // automatically bring up the calendar
+  dateInput.datepicker({
+    minDate: 1,
+    onClose: function() {
+      $(this).trigger("change");
+    }
+  });
+
+    // automatically bring up the calendar
   dateInput.trigger("focus");
 });
+
+$("#modalDueDate").datepicker({
+  minDate: 1
+});
+
+// this will get the tasks to change colors based on due date
+var auditTask = function(taskEl) {
+  console.log(taskEl);
+};
+
 
 // value of due date was changed
 $(".list-group").on("change", "input[type='text']", function() {
@@ -231,6 +263,8 @@ $(".list-group").on("change", "input[type='text']", function() {
     .addClass("badge badge-primary badge-pill")
     .text(date);
     $(this).replaceWith(taskSpan);
+
+  auditTask($(taskSpan).closest(".list-group-item"));
 });
 
 // remove all tasks
